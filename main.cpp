@@ -348,73 +348,121 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
 //        cout << ranks[i] << " ";
 //    }
 //    cout << endl;
+    
     ///////////////////////
     ///////// Compute earliest dates
     ///////////////////////
     cout << "Computing earliest dates :" << endl;
     
     // initialisation
+    vector<bool> used(size, false);
+    int usedQuantity = 0;
     earliestDates.resize(size);
-    earliestDates[0] = 0;
-    for (int i = 1; i < size; ++i) {
+    for (int i = 0; i < size; ++i) {
         earliestDates[i] = -1;
     }
-    vector<int> previousEarliestDates(size, -1);
     
-    // algorithm seen in class, slightly modified
-    bool difference = true;
-    while (difference) {
-        for (int k = 1; k < currentRank; ++k) {
-            cout << "rank = " << k << " : ";
-            for (int j = 0; j < size; ++j) {
-                cout << " node : " << j << endl;
-                if (ranks[j] == k) {
-                    cout << ranks[j]  << " == " << k << endl;
-                    int max = -1;
-                    int maxPredecessor = -1;
-                    bool nonComputedPredecessor = false;
-                    for (int predecessor = 0; predecessor < size && !nonComputedPredecessor; ++predecessor) {
-                        cout << predecessor << " : predecessor" << endl;
-                        if (adjMatrix[predecessor][j].valid) {
-                            cout << predecessor << " -> " << j << " exists" << endl;
-                            if (earliestDates[predecessor] != -1) {
-                                cout << earliestDates[predecessor] << " : ed(" << predecessor << ") " << adjMatrix[predecessor][j].value << ": adj" << endl;
-                                
-                                int value = earliestDates[predecessor] + adjMatrix[predecessor][j].value;
-                                
-                                cout << value << " " << max << endl;
-                                if (value > max) {
-                                    max = value;
-                                    maxPredecessor = predecessor;
-                                    cout << maxPredecessor << endl;
-                                }
-                                
-                            } else {
-                                nonComputedPredecessor = true;
-                                cout << "This predecessor's date has not been computed yet." << endl;
-                            }
-                            
+    cout << "rank = 0 : ";
+    int computedDatesQuantity = 0;
+    // initialisation : find entry nodes
+    for (int node = 0; node < size; ++node) {
+        if (!hasPredecessor(node, adjMatrix)) {
+            earliestDates[node] = 0;
+            computedDatesQuantity++;
+            
+            cout << node << " ";
+        }
+    }
+    cout << endl;
+    
+    currentRank = 1;
+    // While some nodes has not been found,
+    // iterate over more recently found nodes,
+    // and look for their successors.
+    while (usedQuantity < size) {
+        cout << "rank = " << currentRank << " : ";
+        for (int node = 0; node < size && usedQuantity < size; ++node) {
+            // if it is a node we just found
+            if (!used[node]) {
+                cout << endl << "Looking for " << node << "'s successors." << endl;
+                // we look for its successors
+                for (int newNode = 0; newNode < size; ++newNode) {
+                    if (adjMatrix[node][newNode].valid) {
+                        int value = adjMatrix[node][newNode].value + earliestDates[node];
+                        if (value > earliestDates[newNode] || earliestDates[newNode] == -1) {
+                            earliestDates[newNode] = value;
+                            cout << newNode << "(" << earliestDates[newNode] << " through " << node << ") ";
                         }
                     }
-                    if (!nonComputedPredecessor) {
-                        earliestDates[j] = max;
-                    }
-                    cout << j << (char) ('A' + j - 1) << "(successor of " << maxPredecessor << (char) ('A' + maxPredecessor - 1)<<  ") ";
                 }
-            }
-            cout << endl;
-            
-            for (int i = 0; i < size && !difference; ++i) {
-                if (earliestDates[i] != previousEarliestDates[i]) {
-                    difference = true;
-                }
-            }
-            for (int i = 0; i < size && !difference; ++i) {
-                previousEarliestDates[i] = earliestDates[i];
+                used[node] = true;
+                usedQuantity++;
+                cout << endl;
             }
         }
-
+        cout << "computedDatesQuantity : " << computedDatesQuantity << endl;
+        currentRank++;
+        cout << endl;
     }
+
+    
+    
+//    vector<int> previousEarliestDates(size, -1);
+    
+//    // algorithm seen in class, slightly modified
+//    bool difference = true;
+//    while (difference) {
+//        for (int k = 1; k < currentRank; ++k) {
+//            cout << "rank = " << k << " : ";
+//            for (int j = 0; j < size; ++j) {
+//                cout << " node : " << j << endl;
+//                if (ranks[j] == k) {
+//                    cout << ranks[j]  << " == " << k << endl;
+//                    int max = -1;
+//                    int maxPredecessor = -1;
+//                    bool nonComputedPredecessor = false;
+//                    for (int predecessor = 0; predecessor < size && !nonComputedPredecessor; ++predecessor) {
+//                        cout << predecessor << " : predecessor" << endl;
+//                        if (adjMatrix[predecessor][j].valid) {
+//                            cout << predecessor << " -> " << j << " exists" << endl;
+//                            if (earliestDates[predecessor] != -1) {
+//                                cout << earliestDates[predecessor] << " : ed(" << predecessor << ") " << adjMatrix[predecessor][j].value << ": adj" << endl;
+//                                
+//                                int value = earliestDates[predecessor] + adjMatrix[predecessor][j].value;
+//                                
+//                                cout << value << " " << max << endl;
+//                                if (value > max) {
+//                                    max = value;
+//                                    maxPredecessor = predecessor;
+//                                    cout << maxPredecessor << endl;
+//                                }
+//                                
+//                            } else {
+//                                nonComputedPredecessor = true;
+//                                cout << "This predecessor's date has not been computed yet." << endl;
+//                            }
+//                            
+//                        }
+//                    }
+//                    if (!nonComputedPredecessor) {
+//                        earliestDates[j] = max;
+//                    }
+//                    cout << j << (char) ('A' + j - 1) << "(successor of " << maxPredecessor << (char) ('A' + maxPredecessor - 1)<<  ") ";
+//                }
+//            }
+//            cout << endl;
+//            
+//            for (int i = 0; i < size && !difference; ++i) {
+//                if (earliestDates[i] != previousEarliestDates[i]) {
+//                    difference = true;
+//                }
+//            }
+//            for (int i = 0; i < size && !difference; ++i) {
+//                previousEarliestDates[i] = earliestDates[i];
+//            }
+//        }
+//
+//    }
     
     ///////////////////////
     ///////// Compute latest dates

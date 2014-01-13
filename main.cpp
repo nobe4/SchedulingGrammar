@@ -40,7 +40,7 @@ bool circuit(const AdjMatrix &adjMatrix); // checks circuits presence in adjacen
 /*
  * Parses a file, and stores the result in adjMatrix.
  */
-void parseFile(string path, AdjMatrix &adjMatrix);
+bool parseFile(string path, AdjMatrix &adjMatrix);
 
 bool hasPredecessor(int node, const AdjMatrix &adjMatrix); // checks whether node has predecessor(s)
 bool hasSuccessor(int node, const AdjMatrix &adjMatrix); // checks whether node has successor(s)
@@ -82,11 +82,15 @@ int main(int argc, const char * argv[]) {
 //    }
 //    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp33/Haffreingue-de_La_Roche_Saint_Andre-EFREI-L3-TG-TP3-5.txt";
     // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
-   path = "grammar.g";
+   path = "grammars.g";
     
     AdjMatrix adjMatrix;
     cout << "Parsing file " << path << " :" << endl;
-    parseFile(path, adjMatrix);
+
+    if(!parseFile(path, adjMatrix)){
+        cout << "error while parsing the file, exiting ... " << endl;
+        return 1;
+    }
     
     bool goOn = true;
     while (goOn) {
@@ -109,6 +113,7 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
+    return 0;
 }
 
 bool circuit(const AdjMatrix &adjMatrix) {
@@ -381,7 +386,7 @@ bool hasSuccessor(int node, const AdjMatrix &adjMatrix) {
     return false;
 }
 
-void parseFile(string path, AdjMatrix &adjMatrix) {
+bool parseFile(string path, AdjMatrix &adjMatrix) {
     ifstream file(path.c_str()); // open the file
     
     string line = ""; // buffer that will contains every line once at the time
@@ -403,7 +408,7 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
                 nbTasks = parseInt(line);
                 if(nbTasks < 1){
                     cout << "error : bad number of tasks !" << endl;
-                    return;
+                    return false;
                 }
                 cout << "number of tasks to be parsed : " << nbTasks << endl;
                 
@@ -412,7 +417,7 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
                 for (int i = 0; i < adjMatrix.size(); ++i){
                     adjMatrix[i].resize(nbTasks + 2);
                     for (int j = 0; j < adjMatrix[j].size(); ++j){
-                        adjMatrix[i][j].valid = false;
+                        adjMatrix[i][j].valid = false; //  each cell is invalid for now, we will change that while parsing the file
                     }
                 }
                 
@@ -424,10 +429,8 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
                     // (1) check the number of parsed tasks
                     if(nbTasksParsed != nbTasks){
                         cout << "error : not right number of tasks : " << nbTasksParsed << " instead of " << nbTasks << " !" << endl;
-                        return;
+                        return false;
                     }
-                    
-                    // (2) what to do next ? ##############################
                     
                     cout << "right number of tasks parsed !" << endl;
                 }
@@ -440,23 +443,22 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
                     // check if the line is not empty
                     if(splittedLine.size() == 0){
                         cout << "error : line empty !" << endl;
-                        return;
+                        return false;
                     }
                     
                     // check if the line contains at least 3 elements : task number length and -1
                     if(splittedLine.size() < 3){
                         cout << "error : line too short !" << endl;
-                        return;
+                        return false;
                     }
                     
                     // verify that the last one is "-1"
                     if(splittedLine[splittedLine.size() -1] != "-1"){
                         cout << "error : missing -1 at the end of the line" << endl;
-                        return;
+                        return false;
                     }
                     
-                    // someting else to check directly ? ############################
-                    
+                    // assuming here that the line is good, we can parse it
                     vector<int> constraints;
                     for (int i = 2; i < splittedLine.size() - 1 ; ++i) {
                         constraints.push_back(parseInt(splittedLine[i]));
@@ -483,6 +485,7 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
                 }
             }
         }
+
         // after we parsed the adjency matrix
 
         // we add all edge without successor to be predecessor of final edge
@@ -519,9 +522,12 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
         
         // we close the file
         file.close();
-    }    
+    } else {
+        cout << "cannot open file !" << endl;
+        return false;
+    }
+    return true; //  everything is  OK
 }
-
 
 vector<string> split(string const &input) {
     istringstream buffer(input);

@@ -282,7 +282,24 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
 }
 
 void printCalendar(vector<int> &earliestDates, vector<int> &latestDates) {
-    // TODO
+    long size = earliestDates.size();
+    cout << "\t\t\t" << "Nodes";
+    for (int node = 0; node < size; ++node) {
+        cout << "\t\t" << node;
+    }
+    cout << endl;
+    
+    cout << "Earliest dates";
+    for (int node = 0; node < size; ++node) {
+        cout << "\t\t" << earliestDates[node];
+    }
+    cout << endl;
+    
+    cout << "latestDates dates";
+    for (int node = 0; node < size; ++node) {
+        cout << "\t\t" << latestDates[node];
+    }
+    cout << endl;
 }
 
 bool hasPredecessor(int node, const AdjMatrix &adjMatrix) {

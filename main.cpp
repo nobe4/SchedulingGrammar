@@ -35,14 +35,15 @@ typedef vector<vector<AdjCell> > AdjMatrix;
 
 void print(const AdjMatrix &adjMatrix); // prints adjacency matrix
 
-bool cycle(const AdjMatrix &adjMatrix); // checks cycle presence in adjacency matrix
 bool circuit(const AdjMatrix &adjMatrix); // checks circuits presence in adjacency matrix
-void generateAdjMatrix(vector<Link> linkArray, AdjMatrix &adjMatrix, int size); // generate adjacency matrix based on an array of links
 
 /*
  * Parses a file, and stores the result in adjMatrix.
  */
 void parseFile(string path, AdjMatrix &adjMatrix);
+
+bool hasPredecessor(int node, const AdjMatrix &adjMatrix); // checks whether node has predecessor(s)
+bool hasSuccessor(int node, const AdjMatrix &adjMatrix); // checks whether node has successor(s)
 
 /*
  * Reads a line from user and modify adjMatrix based on that order.
@@ -111,7 +112,58 @@ int main(int argc, const char * argv[]) {
 }
 
 bool circuit(const AdjMatrix &adjMatrix) {
-    // TODO
+    long size = adjMatrix.size();
+    
+    // Create an array the size of the matrix.
+    // For each node i, deleted[i]
+    // stores whether i has been deleted.
+    vector<bool> deleted(size, false);
+    
+    // Each time we find a new node,
+    // we incremente the value of deletedQuantity.
+    // This way, we know when we reach the end
+    // of the algorithm (deletedQuantity == size).
+    int deletedQuantity = 0;
+    
+    // Used to store previous
+    // value of foundQuantity.
+    int previousDeletedQuantity = 0;
+    
+    int current = 0;
+    bool goOn = true;
+    while (deletedQuantity < size && goOn) {
+        if (deleted[current] == false) {
+            // if the node is an entry point in the graph,
+            // we delete this node.
+            if (!hasPredecessor(current, adjMatrix)) {
+                deleted[current] = true;
+                deletedQuantity++;
+                cout << current << " has at least one predecessor. We delete it." << endl;
+            }
+        }
+        
+        if (current == size - 1) {
+            if (deletedQuantity == previousDeletedQuantity) {
+                goOn = false;
+            } else {
+                previousDeletedQuantity = deletedQuantity;
+                current = 0;
+            }
+        } else {
+            current++;
+        }
+    }
+    
+    cout << endl;
+    cout << endl;
+    if (deletedQuantity == size) {
+        cout << "Each node has been deleted." << endl;
+        return false;
+    } else {
+        cout << "Some node(s) has not been deleted." << endl;
+        return true;
+    }
+
     return true;
 }
 
@@ -205,11 +257,128 @@ bool executeCommand(AdjMatrix &adjMatrix) {
 }
 
 void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector<int> &latestDates) {
-    // TODO
+    long size = adjMatrix.size();
+    
+    ///////////////////////
+    ///////// Compute ranks
+    ///////////////////////
+    
+    // Create an array the size of the matrix.
+    // For each node i, ranks[i]
+    // stores the rank of node i, or -1 if the rank
+    // has not been computed yet.
+    vector<int> ranks(size, -1);
+    
+    int computedRankQuantity = 0;
+    // initialisation : find entry nodes
+    for (int node = 0; node < size; ++node) {
+        if (!hasPredecessor(node, adjMatrix)) {
+            ranks[node] = 0;
+            computedRankQuantity++;
+        }
+    }
+    
+    int currentRank = 1;
+    // While some nodes has not been found,
+    // iterate over more recently found nodes,
+    // and look for their successors.
+    while (computedRankQuantity != size) {
+        for (int node = 0; node < size && computedRankQuantity != size; ++node) {
+            // if it is a node we just found
+            if (ranks[node] == currentRank - 1) {
+                // we look for its successors
+                for (int newNode = 0; newNode < size && computedRankQuantity != size; ++newNode) {
+                    if (adjMatrix[node][newNode].valid) {
+                        ranks[newNode] = currentRank;
+                        computedRankQuantity++;
+                    }
+                }
+            }
+        }
+        currentRank++;
+    }
+    
+    ///////////////////////
+    ///////// Compute earliest dates
+    ///////////////////////
+    
+    // initialisation
+    earliestDates.resize(size);
+    for (int i = 0; i < size; ++i) {
+        latestDates[i] = -1;
+    }
+    
+    // algorithm seen in class
+    for (int k = 1; k < currentRank; ++k) {
+        for (int j = 0; j < size; ++j) {
+            if (ranks[j] == k) {
+                int max = -1;
+                for (int predecessor = 0; predecessor < size; ++predecessor) {
+                    if (adjMatrix[predecessor][j].valid) {
+                        int value = ranks[predecessor] + adjMatrix[predecessor][j].value;
+                        if (value > max) {
+                            max = value;
+                        }
+                    }
+                }
+                earliestDates[j] = max;
+            }
+        }
+    }
+    
+    ///////////////////////
+    ///////// Compute latest dates
+    ///////////////////////
+    
+    // initialisation
+    latestDates.resize(size);
+    for (int i = 0; i < size; ++i) {
+        latestDates[i] = earliestDates[i];
+    }
+    
+    // algorithm seen in class
+    for (int k = currentRank - 1; k >= 0; --k) {
+        for (int j = 0; j < size; ++j) {
+            if (ranks[j] == k) {
+                int min = -1;
+                for (int successor = 0; successor < size; ++successor) {
+                    if (adjMatrix[j][successor].valid) {
+                        int value = latestDates[successor] - adjMatrix[j][successor].value;
+                        if (value < min || min == -1) {
+                            min = value;
+                        }
+                    }
+                }
+                latestDates[j] = min;
+            }
+        }
+    }
 }
 
 void printCalendar(vector<int> &earliestDates, vector<int> &latestDates) {
     // TODO
+}
+
+bool hasPredecessor(int node, const AdjMatrix &adjMatrix) {
+    int i = 0;
+    while (i < adjMatrix.size()) {
+        if (adjMatrix[i][node].valid) {
+            return true;
+        }
+        i++;
+    }
+    return false;
+}
+
+bool hasSuccessor(int node, const AdjMatrix &adjMatrix) {
+    int i = 0;
+    while (i < adjMatrix.size()) {
+        if (adjMatrix[node][i].valid) {
+            return true;
+        }
+        i++;
+    }
+    return false;
 }
 
 void parseFile(string path, AdjMatrix &adjMatrix) {
@@ -383,90 +552,4 @@ void print(const vector<vector<AdjCell> > &adjMatrix) {
         }
     }
     cout << endl;
-}
-
-// checks cycle presence in adjacency matrix
-bool cycle(const vector<vector<AdjCell> > &adjMatrix) {
-    long size = adjMatrix.size();
-    // Create an array the size of the matrix.
-    // For each node i, deleted[i]
-    // stores whether i has been deleted.
-    vector<bool> deleted(size, false);
-    
-    // Each time we find a new node,
-    // we incremente the value of deletedQuantity.
-    // This way, we know when we reach the end
-    // of the algorithm (deletedQuantity == size).
-    int deletedQuantity = 0;
-    
-    // Used to store previous
-    // value of foundQuantity.
-    int previousDeletedQuantity = 0;
-    
-    int current = 0;
-    bool goOn = true;
-    while (deletedQuantity < size && goOn) {
-        if (deleted[current] == false) {
-            
-            int destinationQuantity = 0;
-            for (int destination = 0; destination < size && destinationQuantity < 2; ++destination) {
-                if (adjMatrix[current][destination].valid && !deleted[destination]) {
-                    destinationQuantity++;
-                }
-            }
-            
-            // if the node is an entry point in the graph,
-            // we delete this node
-            if (destinationQuantity < 2) {
-                deleted[current] = true;
-                deletedQuantity++;
-//                cout << current << " has " << destinationQuantity << " neighbour. We delete it." << endl;
-            }
-        }
-        
-        if (current == size - 1) {
-            if (deletedQuantity == previousDeletedQuantity) {
-                goOn = false;
-            } else {
-                previousDeletedQuantity = deletedQuantity;
-                current = 0;
-            }
-        } else {
-            current++;
-        }
-    }
-    
-//    cout << endl;
-//    cout << endl;
-    if (deletedQuantity == size) {
-//        cout << "Each node has been deleted." << endl;
-        return false;
-    } else {
-//        cout << "Some node(s) has not been deleted." << endl;
-        return true;
-    }
-}
-
-// generate adjacency matrix based on an array of links
-void generateAdjMatrix(vector<Link> linkArray, vector<vector<AdjCell> > &adjMatrix, int size) {
-    // initialise adjMatrix to the right size, with invalid cells
-    AdjCell init;
-    init.valid = false;
-    adjMatrix.resize(size);
-    for (int i = 0; i < size; ++i) {
-        adjMatrix[i].resize(size);
-        for (int j = 0; j < size; ++j) {
-            adjMatrix[i][j] = init;
-        }
-    }
-    
-    // add links one after another, twice : back and forth (for the graph is not oriented)
-    for (int i = 0; i < linkArray.size(); ++i) {
-        adjMatrix[linkArray[i].edge1][linkArray[i].edge2].valid = true;
-        adjMatrix[linkArray[i].edge1][linkArray[i].edge2].value = linkArray[i].value;
-        
-        
-        adjMatrix[linkArray[i].edge2][linkArray[i].edge1].valid = true;
-        adjMatrix[linkArray[i].edge2][linkArray[i].edge1].value = linkArray[i].value;
-    }
 }

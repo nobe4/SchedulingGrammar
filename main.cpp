@@ -47,7 +47,7 @@ bool hasSuccessor(int node, const AdjMatrix &adjMatrix); // checks whether node 
 
 /*
  * Reads a line from user and modify adjMatrix based on that order.
- * You can either create (c), delete (d), verify constraint existence (v), stop (s) 
+ * You can either add (a), delete (d), verify constraint existence (v), stop (s)
  * (If ever you do not have any modification to perform.)
  *
  * Returns true if an operation has been performed, return false otherwise.
@@ -107,6 +107,7 @@ int main(int argc, const char * argv[]) {
             
             cout << "Here is the calendar :" << endl;
             printCalendar(earliestDates, latestDates);
+            cout << endl;
             
             cout << "Would you like to create, delete, or verify the existence of a constraint ?" << endl;
             cin >> goOn;
@@ -224,7 +225,7 @@ bool executeCommand(AdjMatrix &adjMatrix) {
                     // check before deleting :
                     // (1) the constraint exists
                     // (2) the constraint has a successor and the task has a predecessor
-                    // if so we can delete the constraint, else we cannot
+                    // In this case, we can delete the constraint. Otherwise, we cannot
 
                     if(adjMatrix[constraint][taskNb].valid){
                         bool filled = false;
@@ -277,79 +278,6 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
     long size = adjMatrix.size();
     
     ///////////////////////
-    ///////// Compute ranks
-    ///////////////////////
-    cout << "Computing ranks :" << endl;
-    
-    // Create an array the size of the matrix.
-    // For each node i, ranks[i]
-    // stores the rank of node i, or -1 if the rank
-    // has not been computed yet.
-    vector<int> ranks(size, -1);
-    
-    cout << "rank = 0 : ";
-    int computedRankQuantity = 0;
-    // initialisation : find entry nodes
-    for (int node = 0; node < size; ++node) {
-        if (!hasPredecessor(node, adjMatrix)) {
-            ranks[node] = 0;
-            computedRankQuantity++;
-            
-            cout << node << " ";
-        }
-    }
-    cout << endl;
-    
-    int currentRank = 1;
-    // While some nodes has not been found,
-    // iterate over more recently found nodes,
-    // and look for their successors.
-    while (computedRankQuantity != size) {
-        cout << "rank = " << currentRank << " : ";
-        for (int node = 0; node < size && computedRankQuantity != size; ++node) {
-            // if it is a node we just found
-            if (ranks[node] == currentRank - 1) {
-                // we look for its successors
-                for (int newNode = 0; newNode < size && computedRankQuantity != size; ++newNode) {
-                    if (adjMatrix[node][newNode].valid && ranks[newNode] == -1) {
-                        ranks[newNode] = currentRank;
-                        computedRankQuantity++;
-                        cout << newNode << " ";
-                    }
-                }
-            }
-        }
-        currentRank++;
-        cout << endl;
-    }
-    
-//    cout << "Ranks :" << endl;
-//    for (int i = 0; i < size; ++i) {
-//        cout << ranks[i] << " ";
-//    }
-//    cout << endl;
-    
-//    ranks[0] = 0;
-//    ranks[1] = 1;
-//    ranks[2] = 1;
-//    ranks[3] = 2;
-//    ranks[4] = 2;
-//    ranks[5] = 3;
-//    ranks[6] = 4;
-//    ranks[7] = 3;
-//    ranks[8] = 4;
-//    ranks[9] = 3;
-//    ranks[10] = 3;
-//    ranks[11] = 5;
-//    ranks[12] = 6;
-    
-//    cout << "Ranks :" << endl;
-//    for (int i = 0; i < size; ++i) {
-//        cout << ranks[i] << " ";
-//    }
-//    cout << endl;
-    
-    ///////////////////////
     ///////// Compute earliest dates
     ///////////////////////
     cout << "Computing earliest dates :" << endl;
@@ -362,28 +290,25 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
         earliestDates[i] = -1;
     }
     
-    cout << "rank = 0 : ";
-    int computedDatesQuantity = 0;
     // initialisation : find entry nodes
+    cout << "Entry nodes : ";
     for (int node = 0; node < size; ++node) {
         if (!hasPredecessor(node, adjMatrix)) {
             earliestDates[node] = 0;
-            computedDatesQuantity++;
             
             cout << node << " ";
         }
     }
     cout << endl;
     
-    currentRank = 1;
     // While some nodes has not been found,
     // iterate over more recently found nodes,
     // and look for their successors.
     while (usedQuantity < size) {
-        cout << "rank = " << currentRank << " : ";
         for (int node = 0; node < size && usedQuantity < size; ++node) {
-            // if it is a node we just found
-            if (!used[node]) {
+            // if it is a node we already found, but never used to look for
+            // other nodes
+            if (earliestDates[node] != -1 && !used[node]) {
                 cout << endl << "Looking for " << node << "'s successors." << endl;
                 // we look for its successors
                 for (int newNode = 0; newNode < size; ++newNode) {
@@ -400,96 +325,63 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
                 cout << endl;
             }
         }
-        cout << "computedDatesQuantity : " << computedDatesQuantity << endl;
-        currentRank++;
         cout << endl;
     }
 
     
-    
-//    vector<int> previousEarliestDates(size, -1);
-    
-//    // algorithm seen in class, slightly modified
-//    bool difference = true;
-//    while (difference) {
-//        for (int k = 1; k < currentRank; ++k) {
-//            cout << "rank = " << k << " : ";
-//            for (int j = 0; j < size; ++j) {
-//                cout << " node : " << j << endl;
-//                if (ranks[j] == k) {
-//                    cout << ranks[j]  << " == " << k << endl;
-//                    int max = -1;
-//                    int maxPredecessor = -1;
-//                    bool nonComputedPredecessor = false;
-//                    for (int predecessor = 0; predecessor < size && !nonComputedPredecessor; ++predecessor) {
-//                        cout << predecessor << " : predecessor" << endl;
-//                        if (adjMatrix[predecessor][j].valid) {
-//                            cout << predecessor << " -> " << j << " exists" << endl;
-//                            if (earliestDates[predecessor] != -1) {
-//                                cout << earliestDates[predecessor] << " : ed(" << predecessor << ") " << adjMatrix[predecessor][j].value << ": adj" << endl;
-//                                
-//                                int value = earliestDates[predecessor] + adjMatrix[predecessor][j].value;
-//                                
-//                                cout << value << " " << max << endl;
-//                                if (value > max) {
-//                                    max = value;
-//                                    maxPredecessor = predecessor;
-//                                    cout << maxPredecessor << endl;
-//                                }
-//                                
-//                            } else {
-//                                nonComputedPredecessor = true;
-//                                cout << "This predecessor's date has not been computed yet." << endl;
-//                            }
-//                            
-//                        }
-//                    }
-//                    if (!nonComputedPredecessor) {
-//                        earliestDates[j] = max;
-//                    }
-//                    cout << j << (char) ('A' + j - 1) << "(successor of " << maxPredecessor << (char) ('A' + maxPredecessor - 1)<<  ") ";
-//                }
-//            }
-//            cout << endl;
-//            
-//            for (int i = 0; i < size && !difference; ++i) {
-//                if (earliestDates[i] != previousEarliestDates[i]) {
-//                    difference = true;
-//                }
-//            }
-//            for (int i = 0; i < size && !difference; ++i) {
-//                previousEarliestDates[i] = earliestDates[i];
-//            }
-//        }
-//
-//    }
-    
     ///////////////////////
     ///////// Compute latest dates
     ///////////////////////
-    
+    cout << endl << "Looking for latest dates :" << endl;
     // initialisation
+    usedQuantity = 0;
     latestDates.resize(size);
     for (int i = 0; i < size; ++i) {
-        latestDates[i] = earliestDates[i];
+        latestDates[i] = -1;
+        used[i] = false;
     }
     
-    // algorithm seen in class
-    for (int k = currentRank - 1; k >= 0; --k) {
-        for (int j = 0; j < size; ++j) {
-            if (ranks[j] == k) {
-                int min = -1;
-                for (int successor = 0; successor < size; ++successor) {
-                    if (adjMatrix[j][successor].valid) {
-                        int value = latestDates[successor] - adjMatrix[j][successor].value;
-                        if (value < min || min == -1) {
-                            min = value;
+    cout << "Entry nodes : ";
+    // initialisation : find entry nodes
+    for (int node = 0; node < size; ++node) {
+        if (!hasSuccessor(node, adjMatrix)) {
+            latestDates[node] = earliestDates[node];
+            
+            cout << node << " ";
+        }
+    }
+    cout << endl;
+    
+    // While some nodes has not been found,
+    // iterate over more recently found nodes,
+    // and look for their successors.
+    while (usedQuantity < size - 1) {
+        for (int node = 0; node < size && usedQuantity < size; ++node) {
+            // if it is a node we just found
+            if (latestDates[node] != -1 && !used[node]) {
+                cout << endl << "Looking for " << node << "'s predecessors." << endl;
+                // we look for its successors
+                for (int newNode = 0; newNode < size; ++newNode) {
+                    if (adjMatrix[newNode][node].valid) {
+                        int value = latestDates[node] - adjMatrix[newNode][node].value;
+                        if (value < latestDates[newNode] || latestDates[newNode] == -1) {
+                            if (latestDates[newNode] != -1) {
+                                used[newNode] = false;
+                                usedQuantity--;
+                            }
+                            
+                            latestDates[newNode] = value;
+                            cout << newNode << "(" << latestDates[newNode] << " through " << node << ") ";
+                            cout << "";
                         }
                     }
                 }
-                latestDates[j] = min;
+                used[node] = true;
+                usedQuantity++;
+                cout << endl;
             }
         }
+        cout << endl;
     }
 }
 

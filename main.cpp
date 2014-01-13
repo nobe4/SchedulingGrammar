@@ -183,10 +183,11 @@ bool executeCommand(AdjMatrix adjMatrix) {
 }
 
 void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector<int> &latestDates) {
+    long size = adjMatrix.size();
+    
     ///////////////////////
     ///////// Compute ranks
     ///////////////////////
-    long size = adjMatrix.size();
     
     // Create an array the size of the matrix.
     // For each node i, ranks[i]
@@ -204,20 +205,80 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
     }
     
     int currentRank = 1;
+    // While some nodes has not been found,
+    // iterate over more recently found nodes,
+    // and look for their successors.
     while (computedRankQuantity != size) {
-        // TODO
+        for (int node = 0; node < size && computedRankQuantity != size; ++node) {
+            // if it is a node we just found
+            if (ranks[node] == currentRank - 1) {
+                // we look for its successors
+                for (int newNode = 0; newNode < size && computedRankQuantity != size; ++newNode) {
+                    if (adjMatrix[node][newNode].valid) {
+                        ranks[newNode] = currentRank;
+                        computedRankQuantity++;
+                    }
+                }
+            }
+        }
+        currentRank++;
     }
-    
-    
     
     ///////////////////////
     ///////// Compute earliest dates
     ///////////////////////
     
+    // initialisation
+    earliestDates.resize(size);
+    for (int i = 0; i < size; ++i) {
+        latestDates[i] = -1;
+    }
+    
+    // algorithm seen in class
+    for (int k = 1; k < currentRank; ++k) {
+        for (int j = 0; j < size; ++j) {
+            if (ranks[j] == k) {
+                int max = -1;
+                for (int predecessor = 0; predecessor < size; ++predecessor) {
+                    if (adjMatrix[predecessor][j].valid) {
+                        int value = ranks[predecessor] + adjMatrix[predecessor][j].value;
+                        if (value > max) {
+                            max = value;
+                        }
+                    }
+                }
+                earliestDates[j] = max;
+            }
+        }
+    }
     
     ///////////////////////
     ///////// Compute latest dates
     ///////////////////////
+    
+    // initialisation
+    latestDates.resize(size);
+    for (int i = 0; i < size; ++i) {
+        latestDates[i] = earliestDates[i];
+    }
+    
+    // algorithm seen in class
+    for (int k = currentRank - 1; k >= 0; --k) {
+        for (int j = 0; j < size; ++j) {
+            if (ranks[j] == k) {
+                int min = -1;
+                for (int successor = 0; successor < size; ++successor) {
+                    if (adjMatrix[j][successor].valid) {
+                        int value = latestDates[successor] - adjMatrix[j][successor].value;
+                        if (value < min || min == -1) {
+                            min = value;
+                        }
+                    }
+                }
+                latestDates[j] = min;
+            }
+        }
+    }
 }
 
 void printCalendar(vector<int> &earliestDates, vector<int> &latestDates) {

@@ -534,9 +534,7 @@ bool parseFile(string path, AdjMatrix &adjMatrix) {
         }
         
         // print the matrix created
-        cout << "Matrix created : " << endl;
-        print(adjMatrix);
-        
+        cout << "Matrix created : " << endl;      
         // we close the file
         file.close();
     } else {

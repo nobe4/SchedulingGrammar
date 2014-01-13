@@ -21,14 +21,14 @@ void verifyTask(int taskNb, int constraint);
 void addTask(int taskNb, int constraint);
 void deleteTask(int taskNb, int constraint);
 
-int main(int argc, char const *argv[])
-{
-    string s;
-    getline(cin, s);
-    vector<string> input = split(s);
-    cout << "return from parse Input : " << parseInput(input) << endl;
-    return 0;
-}
+//int main(int argc, char const *argv[])
+//{
+//    string s;
+//    getline(cin, s);
+//    vector<string> input = split(s);
+//    cout << "return from parse Input : " << parseInput(input) << endl;
+//    return 0;
+//}
 
 bool parseInput(vector<string> const &input){
     // verifying the lenght of input : we accept 1 and 3
@@ -71,6 +71,7 @@ bool parseInput(vector<string> const &input){
         cout << "error : bad number of input !" << endl;
         return false;
     }
+    return true;
 }
 
 vector<string> split(string const &input) {

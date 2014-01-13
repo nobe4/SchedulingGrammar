@@ -51,7 +51,7 @@ void parseFile(string path, AdjMatrix &adjMatrix);
  *
  * Returns true if an operation has been performed, return false otherwise.
  */
-bool executeCommand(AdjMatrix adjMatrix);
+bool executeCommand(AdjMatrix &adjMatrix);
 
 /*
  * Computes earliest and latest dates based on adjMatrix.
@@ -80,8 +80,8 @@ int main(int argc, const char * argv[]) {
 //        cout << endl;
 //    }
 //    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp33/Haffreingue-de_La_Roche_Saint_Andre-EFREI-L3-TG-TP3-5.txt";
-    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
-//    path = "grammar.g";
+    // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
+   path = "grammar.g";
     
     AdjMatrix adjMatrix;
     cout << "Parsing file " << path << " :" << endl;
@@ -89,6 +89,7 @@ int main(int argc, const char * argv[]) {
     
     bool goOn = true;
     while (goOn) {
+        print(adjMatrix);
         if (circuit(adjMatrix)) {
             cout << "There is one or several circuits. Please delete them." << endl;
             executeCommand(adjMatrix);
@@ -114,18 +115,91 @@ bool circuit(const AdjMatrix &adjMatrix) {
     return true;
 }
 
-bool executeCommand(AdjMatrix adjMatrix) {
+bool executeCommand(AdjMatrix &adjMatrix) {
     string s;
     bool goOn = true;
     while(goOn) {
+        cout << "$ input > ";
         getline(cin, s);
         if (s == "stop" || s == "s") {
             goOn = false;
             return false;
-        } /*else if {
-           // TODO : get inspiration from parseInput
-           // other options
-           }*/
+        } else {
+            // split the input by whitespaces
+            vector<string> input = split(s);
+            // verifying the lenght of input : we accept 1 and 3
+            if(input.size() == 3){
+                // 3 inputs : operation, task number and contraint
+                // operation is either "a", "d" or "v"
+                // task number and constraint are integers
+
+                // ex : "v 1 2" will verify the task 1 with constraint 2
+                //      "a 1 2" will add the constraint 1 to 2
+                //      "d 1 2" will remove the constraint 1 to 2
+
+                // first : cast strings to integers   
+                int taskNb = -1, constraint = -1; // variables for the operation we try to achieve
+               
+                // cast from the string to integer, if cast fails (string is not an integer) we got 0, 
+                // so 0 will be assigned to verify so it wont change anything
+                // floating point number will be rounded
+                constraint = parseInt(input[1]);
+                taskNb = parseInt(input[2]);
+
+                // next check operation and call the right function for each case
+                if(input[0] == "a"){
+                    adjMatrix[constraint][taskNb].valid = true;
+                    cout << "added " << constraint << " as a contraint of " << taskNb << endl;
+                }else if(input[0] == "d"){
+
+                    // check before deleting :
+                    // (1) the constraint exists
+                    // (2) the constraint has a successor and the task has a predecessor
+                    // if so we can delete the constraint, else we cannot
+
+                    if(adjMatrix[constraint][taskNb].valid){
+                        bool filled = false;
+                        // check if the task has at least one predecessor
+                        for (int i = 1; i < adjMatrix.size() - 1; ++i) {
+                            filled = adjMatrix[i][taskNb].valid || filled;
+                        }
+                        //if filled we can check for the constraint to have at least one successor
+                        if(filled){
+                            filled = false;
+                            for (int i = 1; i < adjMatrix.size() - 1; ++i) {
+                                filled = adjMatrix[constraint][i].valid || filled;
+                            }   
+                            if(filled){
+                                adjMatrix[constraint][taskNb].valid = false;
+                                cout << "constraint between " << constraint << " and " << taskNb << " deleted" << endl;
+                            }else{
+                                cout << "cannot delete constraint : " << constraint << " doesn't have another successor" << endl;
+                            }
+                        }else{
+                            cout << "cannot delete constraint :" << taskNb << " doesn't have another predecessor" << endl;
+                        }
+                    }else{
+                        cout << "constraint doesn't exist" << endl;
+                    }
+
+                    
+                }else if(input[0] == "v"){
+                    if(adjMatrix[constraint][taskNb].valid){
+                        cout << constraint << " is a contraint of " << taskNb << " !" << endl;
+                    }else{
+                        cout << constraint << " is not a contraint of " << taskNb << " !" << endl;
+                    }
+                }else{
+                    cout << "error : unknown operation !" << endl;
+                    return false;
+                }
+                return true;
+            } else {
+                cout << "error : bad number of input !" << endl;
+                return false;
+            }
+            return true;
+        }
     }
     return true;
 }
@@ -241,7 +315,7 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
             }
         }
         // after we parsed the adjency matrix
-        
+
         // we add all edge without successor to be predecessor of final edge
         for (int i = 1; i < adjMatrix.size() - 1; ++i) {
             bool filled = false;
@@ -276,10 +350,8 @@ void parseFile(string path, AdjMatrix &adjMatrix) {
         
         // we close the file
         file.close();
-    }
-    
+    }    
 }
-
 
 
 vector<string> split(string const &input) {
@@ -294,8 +366,6 @@ int parseInt(string s){
     buffer >> r;
     return r;
 }
-
-
 
 void print(const vector<vector<AdjCell> > &adjMatrix) {
     long size = adjMatrix.size();

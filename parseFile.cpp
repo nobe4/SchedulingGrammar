@@ -180,7 +180,6 @@ void parseFile(string path, vector<vector<AdjCell> > &adjMatrix){
         // we close the file
         file.close();
     }
-
 }
 
 vector<string> split(string const &input) {

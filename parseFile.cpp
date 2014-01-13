@@ -5,7 +5,6 @@
 #include <vector>
 #include <iterator>
 
-
 using namespace std;
 
 void parseFile(string path);

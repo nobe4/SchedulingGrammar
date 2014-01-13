@@ -81,8 +81,8 @@ int main(int argc, const char * argv[]) {
 //        cout << endl;
 //    }
 //    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp33/Haffreingue-de_La_Roche_Saint_Andre-EFREI-L3-TG-TP3-5.txt";
-    // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
-   path = "grammar.g";
+    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
+//   path = "grammar.g";
     
     AdjMatrix adjMatrix;
     cout << "Parsing file " << path << " :" << endl;
@@ -135,10 +135,20 @@ bool circuit(const AdjMatrix &adjMatrix) {
         if (deleted[current] == false) {
             // if the node is an entry point in the graph,
             // we delete this node.
-            if (!hasPredecessor(current, adjMatrix)) {
+            bool foundPredecessor = false;
+            int i = 0;
+            while (!foundPredecessor && i < adjMatrix.size() ) {
+                if (adjMatrix[i][current].valid && !deleted[i]) {
+                    foundPredecessor = true;
+                }
+                i++;
+            }
+            
+            
+            if (!foundPredecessor) {
                 deleted[current] = true;
                 deletedQuantity++;
-                cout << current << " has at least one predecessor. We delete it." << endl;
+//                cout << current << " has at least one predecessor. We delete it." << endl;
             }
         }
         
@@ -157,10 +167,10 @@ bool circuit(const AdjMatrix &adjMatrix) {
     cout << endl;
     cout << endl;
     if (deletedQuantity == size) {
-        cout << "Each node has been deleted." << endl;
+//        cout << "Each node has been deleted." << endl;
         return false;
     } else {
-        cout << "Some node(s) has not been deleted." << endl;
+//        cout << "Some node(s) has not been deleted." << endl;
         return true;
     }
 
@@ -305,7 +315,7 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
     // initialisation
     earliestDates.resize(size);
     for (int i = 0; i < size; ++i) {
-        latestDates[i] = -1;
+        earliestDates[i] = -1;
     }
     
     // algorithm seen in class
@@ -357,21 +367,21 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
 
 void printCalendar(vector<int> &earliestDates, vector<int> &latestDates) {
     long size = earliestDates.size();
-    cout << "\t\t\t" << "Nodes";
+    cout << "Nodes" << "\t\t\t";
     for (int node = 0; node < size; ++node) {
-        cout << "\t\t" << node;
+        cout << "\t" << node;
     }
     cout << endl;
     
-    cout << "Earliest dates";
+    cout << "Earliest dates\t";
     for (int node = 0; node < size; ++node) {
-        cout << "\t\t" << earliestDates[node];
+        cout << "\t" << earliestDates[node];
     }
     cout << endl;
     
     cout << "latestDates dates";
     for (int node = 0; node < size; ++node) {
-        cout << "\t\t" << latestDates[node];
+        cout << "\t" << latestDates[node];
     }
     cout << endl;
 }
@@ -553,7 +563,7 @@ int parseInt(string s){
     return r;
 }
 
-void print(const vector<vector<AdjCell> > &adjMatrix) {
+void print(const AdjMatrix &adjMatrix) {
     long size = adjMatrix.size();
     for (int j = 0; j < size; ++j) {
         cout << "\t" << j;

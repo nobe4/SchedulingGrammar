@@ -16,15 +16,6 @@ typedef struct _adjCell {
     int value, valid;
 } AdjCell;
 
-// Link in the graph.
-// This structure is used to store a link.
-// The field "value" is the weight of the link.
-// The field "edge1" is the first extremity of the link.
-// The field "value" is the second extremity of the link.
-typedef struct _link {
-    int value, edge1, edge2;
-} Link;
-
 
 void parseFile(string path, vector<vector<AdjCell> > &adjMatrix);
 // file synthax (tabs are actually spaces)
@@ -189,7 +180,6 @@ void parseFile(string path, vector<vector<AdjCell> > &adjMatrix){
         // we close the file
         file.close();
     }
-
 }
 
 vector<string> split(string const &input) {

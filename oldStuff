@@ -1,0 +1,32 @@
+    // usedQuantity = 0;
+// While some nodes has not been found,
+// iterate over more recently found nodes,
+// and look for their successors.
+while (usedQuantity < size - 1) {
+    for (int node = 0; node < size && usedQuantity < size; ++node) {
+        // if it is a node we just found
+        if (latestDates[node] != -1 && !used[node]) {
+            cout << endl << "Looking for " << node << "'s predecessors." << endl;
+            // we look for its successors
+            for (int newNode = 0; newNode < size; ++newNode) {
+                if (adjMatrix[newNode][node].valid) {
+                    int value = latestDates[node] - adjMatrix[newNode][node].value;
+                    if (value < latestDates[newNode] || latestDates[newNode] == -1) {
+                        if (latestDates[newNode] != -1) {
+                            used[newNode] = false;
+                            usedQuantity--;
+                        }
+
+                        latestDates[newNode] = value;
+                        cout << newNode << "(" << latestDates[newNode] << " through " << node << ") ";
+                        cout << "";
+                    }
+                }
+            }
+            used[node] = true;
+            usedQuantity++;
+            cout << endl;
+        }
+    }
+    cout << endl;
+}

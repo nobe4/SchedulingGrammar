@@ -82,7 +82,7 @@ int main(int argc, const char * argv[]) {
     //    }
     //    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp33/Haffreingue-de_La_Roche_Saint_Andre-EFREI-L3-TG-TP3-5.txt";
     // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
-  path = "grammar.g";
+  path = "grammar5.g";
     // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
     //   path = "grammars.g";
     
@@ -121,7 +121,7 @@ int main(int argc, const char * argv[]) {
         }
     }
 
-    cout << "Thanks for using this programm, see you soon ! " << endl << endl;
+    cout << "Thanks for using this program, see you soon ! " << endl << endl;
 
     return 0;
 }
@@ -253,7 +253,7 @@ bool executeCommand(AdjMatrix &adjMatrix) {
                         for (int i = 1; i < adjMatrix.size() - 1; ++i) {
                             filled = adjMatrix[i][taskNb].valid || filled;
                         }
-                        //if filled we can check for the constraint to have at least one successor
+                        //if fillaed we can check for the constraint to have at least one successor
                         if(filled){
                             filled = false;
                             for (int i = 1; i < adjMatrix.size() - 1; ++i) {
@@ -339,15 +339,20 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
                         if (value > earliestDates[newNode] || earliestDates[newNode] == -1) {
                             earliestDates[newNode] = value;
                             cout << newNode << "(" << earliestDates[newNode] << " through " << node << ") ";
+                            used[newNode] = false;
                         }
                     }
                 }
                 used[node] = true;
-                usedQuantity++;
-                cout << endl;
             }
         }
+
         cout << endl;
+        usedQuantity = 0;
+        for (int i = 0; i < size; ++i) {
+            usedQuantity += (used[i] == true)?1:0;
+        }
+        cout << usedQuantity << endl;
     }
 
     
@@ -356,60 +361,45 @@ void computeDates(const AdjMatrix &adjMatrix, vector<int> &earliestDates, vector
     ///////////////////////
     cout << endl << "Looking for latest dates :" << endl;
     // initialisation
-    usedQuantity = 0;
     latestDates.resize(size);
     for (int i = 0; i < size; ++i) {
         latestDates[i] = -1;
         used[i] = false;
     }
-    
-    cout << "Entry nodes : ";
+
+    vector<int> successorList;
     // initialisation : find entry nodes
     for (int node = 0; node < size; ++node) {
         if (!hasSuccessor(node, adjMatrix)) {
             latestDates[node] = earliestDates[node];
-            
-            cout << node << " ";
+            cout << "Entry nodes : " << node << " " << endl;
         }
     }
-    cout << endl;
-    
-    // While some nodes has not been found,
-    // iterate over more recently found nodes,
-    // and look for their successors.
-    while (usedQuantity < size - 1) {
-        for (int node = 0; node < size && usedQuantity < size; ++node) {
-            // if it is a node we just found
-            if (latestDates[node] != -1 && !used[node]) {
-                cout << endl << "Looking for " << node << "'s predecessors." << endl;
-                // we look for its successors
-                for (int newNode = 0; newNode < size; ++newNode) {
-                    if (adjMatrix[newNode][node].valid) {
-                        int value = latestDates[node] - adjMatrix[newNode][node].value;
-                        if (value < latestDates[newNode] || latestDates[newNode] == -1) {
-                            if (latestDates[newNode] != -1) {
-                                used[newNode] = false;
-                                usedQuantity--;
-                            }
-                            
-                            latestDates[newNode] = value;
-                            cout << newNode << "(" << latestDates[newNode] << " through " << node << ") ";
-                            cout << "";
-                        }
-                    }
-                }
-                used[node] = true;
-                usedQuantity++;
-                cout << endl;
-            }
+    // for every nodes
+    for (int node = 0; node < size; ++node){
+        successorList.clear(); //  we clear the successor list
+        for (int newNode = 0; newNode < size; ++newNode) {
+            if (adjMatrix[node][newNode].valid) // if new node is successor of node
+                successorList.push_back(newNode); // we add it to sucessor list
         }
-        cout << endl;
+        if (successorList.size() > 0){ //  if there are successors
+            int longuestSuccessor = successorList[0];
+            int tmp = earliestDates[successorList[0]];
+            // we calculate the longuest successor
+            for (int i = 1; i < successorList.size(); i++) {
+                if (earliestDates[successorList[i]] > tmp) {
+                    longuestSuccessor = successorList[i];
+                }
+            }
+            // we add it to the latest date vector
+            latestDates[node] = earliestDates[longuestSuccessor] - adjMatrix[node][longuestSuccessor].value;
+        }
     }
 }
 
 void printCalendar(vector<int> &earliestDates, vector<int> &latestDates) {
     long size = earliestDates.size();
-    cout << "Nodes" << "\t\t\t";
+    cout << "Nodes" << "\t\t";
     for (int node = 0; node < size; ++node) {
         cout << "\t" << node;
     }
@@ -421,7 +411,7 @@ void printCalendar(vector<int> &earliestDates, vector<int> &latestDates) {
     }
     cout << endl;
     
-    cout << "latestDates dates";
+    cout << "LatestDates dates";
     for (int node = 0; node < size; ++node) {
         cout << "\t" << latestDates[node];
     }

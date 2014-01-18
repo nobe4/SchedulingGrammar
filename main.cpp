@@ -73,18 +73,18 @@ int parseInt(string s);
 
 int main(int argc, const char * argv[]) {
     string path;
-//    if (argc == 2) {
-//        path = argv[1];
-//    } else {
-//        cout << "Which file do you want to open ? ";
-//        cin >> path;
-//        cout << endl;
-//    }
-//    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp33/Haffreingue-de_La_Roche_Saint_Andre-EFREI-L3-TG-TP3-5.txt";
-    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
-//   path = "grammar.g";
+    //    if (argc == 2) {
+    //        path = argv[1];
+    //    } else {
+    //        cout << "Which file do you want to open ? ";
+    //        cin >> path;
+    //        cout << endl;
+    //    }
+    //    path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp33/Haffreingue-de_La_Roche_Saint_Andre-EFREI-L3-TG-TP3-5.txt";
     // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
-//   path = "grammars.g";
+  path = "grammar.g";
+    // path = "/Users/matthieudelaro/Documents/classes/L3/S5/theorie_des_graphes/TP/tp4/grammar.g";
+    //   path = "grammars.g";
     
     AdjMatrix adjMatrix;
     cout << "Parsing file " << path << " :" << endl;
@@ -95,6 +95,7 @@ int main(int argc, const char * argv[]) {
     }
     
     bool goOn = true;
+    string input = "";
     while (goOn) {
         print(adjMatrix);
         if (circuit(adjMatrix)) {
@@ -109,13 +110,19 @@ int main(int argc, const char * argv[]) {
             printCalendar(earliestDates, latestDates);
             cout << endl;
             
-            cout << "Would you like to create, delete, or verify the existence of a constraint ?" << endl;
-            cin >> goOn;
-            if (goOn) {
-                executeCommand(adjMatrix);
+            cout << "Would you like to operate on the matrix ? (y/n)" << endl;
+            getline(cin, input);
+            if (input == "y" || input == "yes") {
+                goOn = executeCommand(adjMatrix);
+            }
+            else if(input == "n" || input == "no"){
+                goOn = false;
             }
         }
     }
+
+    cout << "Thanks for using this programm, see you soon ! " << endl << endl;
+
     return 0;
 }
 
@@ -156,7 +163,7 @@ bool circuit(const AdjMatrix &adjMatrix) {
             if (!foundPredecessor) {
                 deleted[current] = true;
                 deletedQuantity++;
-//                cout << current << " has at least one predecessor. We delete it." << endl;
+                // cout << current << " has at least one predecessor. We delete it." << endl;
             }
         }
         
@@ -175,10 +182,10 @@ bool circuit(const AdjMatrix &adjMatrix) {
     cout << endl;
     cout << endl;
     if (deletedQuantity == size) {
-//        cout << "Each node has been deleted." << endl;
+       // cout << "Each node has been deleted." << endl;
         return false;
     } else {
-//        cout << "Some node(s) has not been deleted." << endl;
+        // cout << "Some node(s) has not been deleted." << endl;
         return true;
     }
 
@@ -189,12 +196,25 @@ bool executeCommand(AdjMatrix &adjMatrix) {
     string s;
     bool goOn = true;
     while(goOn) {
+        print(adjMatrix);
+        cout << "Would you like to add (a), delete (d), or verify (v) the existence of a constraint (help : h) ?" << endl; 
         cout << "$ input > ";
         getline(cin, s);
         if (s == "stop" || s == "s") {
             goOn = false;
             return false;
-        } else {
+        }else if (s == "help" || s == "h")  {
+            cout << "######################################################" << endl;
+            cout << "#####                  HELP                       ####" << endl;
+            cout << "######################################################" << endl;
+            cout << "3 inputs : operation, task number and contraint" << endl;
+            cout <<  "operation is either 'a', 'd' or 'v'" << endl;
+            cout << "task number and constraint are integers" << endl;
+            cout << "ex : 'v 1 2' will verify the task 1 with constraint 2" << endl;
+            cout << "     'a 1 2' will add the constraint 1 to 2" << endl;
+            cout << "     'd 1 2' will remove the constraint 1 to 2" << endl << endl << endl << endl;
+        } 
+        else {
             // split the input by whitespaces
             vector<string> input = split(s);
             // verifying the lenght of input : we accept 1 and 3
@@ -246,7 +266,7 @@ bool executeCommand(AdjMatrix &adjMatrix) {
                                 cout << "cannot delete constraint : " << constraint << " doesn't have another successor" << endl;
                             }
                         }else{
-                            cout << "cannot delete constraint :" << taskNb << " doesn't have another predecessor" << endl;
+                            cout << "cannot delete constraint : " << taskNb << " doesn't have another predecessor" << endl;
                         }
                     }else{
                         cout << "constraint doesn't exist" << endl;
@@ -261,12 +281,14 @@ bool executeCommand(AdjMatrix &adjMatrix) {
                     }
                 }else{
                     cout << "error : unknown operation !" << endl;
-                    return false;
+                    // return false;
+                    continue;
                 }
                 return true;
             } else {
                 cout << "error : bad number of input !" << endl;
-                return false;
+                // return false;
+                continue;
             }
             return true;
         }
